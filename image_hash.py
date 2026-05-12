@@ -103,6 +103,98 @@ def verify_determinism(data: str, nonce: int) -> bool:
     return is_deterministic
 
 
+def check_difficulty(pixels: np.ndarray, difficulty: int) -> bool:
+    """
+    Check if a pixel array meets the difficulty threshold.
+    
+    In IGoW PoW, miners must find data+nonce combinations that produce images
+    where the first N pixels have red channel values < 50. This is analogous
+    to Bitcoin's target threshold but operates in pixel space instead of hash space.
+    
+    Difficulty scaling:
+    - difficulty=1: Trivial, ~19% chance any image passes
+    - difficulty=5: Moderate, ~0.7% chance of passing
+    - difficulty=10: Hard, on a 10x10 image all top-row pixels must qualify
+    
+    Args:
+        pixels: np.ndarray of shape (height, width, 3) with uint8 RGB values
+        difficulty: Number of leading pixels that must have red < 50
+    
+    Returns:
+        bool: True if first `difficulty` pixels all have red < 50, False otherwise
+    """
+    # Extract red channel (index 2 in RGB, which is the last axis)
+    red_channel = pixels[:, :, 2]
+    
+    # Flatten to 1D array
+    red_flat = red_channel.flatten()
+    
+    # Check first `difficulty` pixels - all must have red < 50
+    for i in range(difficulty):
+        if red_flat[i] >= 50:
+            return False
+    
+    return True
+
+
+def get_difficulty_stats(difficulty: int) -> dict:
+    """
+    Calculate probability and expected work for a given difficulty level.
+    
+    This function mirrors Bitcoin's difficulty adjustment but in pixel probability space.
+    Each pixel independently has a 50/256 ≈ 19.5% chance of satisfying the
+    red-channel-less-than-50 condition. As difficulty increases, the probability
+    compounds multiplicatively, exponentially increasing the expected attempts.
+    
+    Args:
+        difficulty: The difficulty level (number of pixels required to pass)
+    
+    Returns:
+        dict with keys:
+            - "difficulty": The input difficulty value
+            - "probability": Probability that `difficulty` pixels all satisfy condition
+            - "expected_attempts": Average number of nonces needed to find one valid image
+    """
+    # Probability that a single pixel has red < 50
+    single_pixel_probability = 50 / 256
+    
+    # Probability that all `difficulty` pixels satisfy the condition
+    combined_probability = single_pixel_probability ** difficulty
+    
+    # Expected attempts (reciprocal of probability)
+    expected_attempts = int(1 / combined_probability)
+    
+    return {
+        "difficulty": difficulty,
+        "probability": combined_probability,
+        "expected_attempts": expected_attempts
+    }
+
+
+def visualize_difficulty() -> None:
+    """
+    Display a formatted table of difficulty levels and their corresponding statistics.
+    
+    This helps users understand the exponential growth in work required as difficulty
+    increases. The table shows how quickly the expected attempts scale with difficulty.
+    """
+    print("\nDifficulty Analysis Table:")
+    print("-" * 70)
+    print(f"{'Difficulty':<12} {'Probability':<25} {'Expected Attempts':<20}")
+    print("-" * 70)
+    
+    for difficulty in range(1, 7):
+        stats = get_difficulty_stats(difficulty)
+        prob = stats["probability"]
+        attempts = stats["expected_attempts"]
+        
+        # Format with comma separators for readability
+        attempts_str = f"{attempts:,}"
+        print(f"{difficulty:<12} {prob:<25.2e} {attempts_str:<20}")
+    
+    print("-" * 70)
+
+
 if __name__ == "__main__":
     # Test with sample block data
     print("=" * 50)
@@ -122,5 +214,26 @@ if __name__ == "__main__":
     
     # Print array shape
     print(f"Pixel Array Shape: {image.shape}")
+    
+    print("=" * 50)
+    
+    # ============================================================
+    # DIFFICULTY SYSTEM TEST
+    # ============================================================
+    print("\n" + "=" * 50)
+    print("DIFFICULTY SYSTEM TEST")
+    print("=" * 50)
+    
+    # Show difficulty analysis table
+    visualize_difficulty()
+    
+    # Test generated image against different difficulty levels
+    print("\nTesting image (IGOW_BLOCK_0, nonce=42) against difficulty levels:")
+    test_difficulties = [1, 2, 3]
+    
+    for diff in test_difficulties:
+        result = check_difficulty(image, diff)
+        status = "PASS" if result else "FAIL"
+        print(f"Difficulty {diff}: {status}")
     
     print("=" * 50)
