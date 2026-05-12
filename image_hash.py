@@ -7,6 +7,7 @@ creating a unique visual fingerprint that can be verified by all nodes.
 """
 
 import hashlib
+import time
 import numpy as np
 
 
@@ -195,6 +196,118 @@ def visualize_difficulty() -> None:
     print("-" * 70)
 
 
+def mine_block(data: str, difficulty: int, width: int = 10, height: int = 10) -> dict:
+    """
+    Mine a block by finding a nonce that produces an image meeting difficulty threshold.
+    
+    This is the core PoW computation for IGoW. The nonce search is intentionally brute force
+    with no shortcuts — this is a fundamental security property. There is no way to predict
+    which nonce will satisfy the difficulty without trying them sequentially. This ensures
+    that the only way to create valid blocks is through computational work.
+    
+    Args:
+        data: Block data string to mine
+        difficulty: Required difficulty level (number of qualifying pixels)
+        width: Pixel array width (default 10)
+        height: Pixel array height (default 10)
+    
+    Returns:
+        dict with keys:
+            - "nonce": The winning nonce value
+            - "attempts": Total attempts made (same as nonce)
+            - "elapsed": Time taken in seconds (4 decimal places)
+            - "hash_rate": Attempts per second (2 decimal places)
+            - "pixels": The valid pixel array
+            - "image_hex": Hex fingerprint of the pixels
+            - "data": Original data string
+            - "difficulty": Difficulty level used
+    """
+    start_time = time.time()
+    nonce = 0
+    
+    # Brute force search for valid nonce
+    while True:
+        pixels = generate_image_hash(data, nonce, width, height)
+        
+        if check_difficulty(pixels, difficulty):
+            end_time = time.time()
+            elapsed = round(end_time - start_time, 4)
+            hash_rate = round(nonce / elapsed, 2) if elapsed > 0 else 0
+            
+            return {
+                "nonce": nonce,
+                "attempts": nonce,
+                "elapsed": elapsed,
+                "hash_rate": hash_rate,
+                "pixels": pixels,
+                "image_hex": image_to_hex(pixels),
+                "data": data,
+                "difficulty": difficulty
+            }
+        
+        nonce += 1
+
+
+def print_mining_result(result: dict) -> None:
+    """
+    Print a formatted mining result report.
+    
+    Displays the outcome of a successful mining operation with all relevant statistics
+    in a clean, readable format.
+    
+    Args:
+        result: Dict returned from mine_block()
+    """
+    print("\n" + "=" * 70)
+    print("MINING RESULT")
+    print("=" * 70)
+    print(f"Data mined         : {result['data']}")
+    print(f"Difficulty         : {result['difficulty']}")
+    print(f"Winning nonce      : {result['nonce']}")
+    print(f"Total attempts     : {result['attempts']:,}")
+    print(f"Time taken         : {result['elapsed']} seconds")
+    print(f"Hash rate          : {result['hash_rate']} attempts/sec")
+    print(f"Image fingerprint  : {result['image_hex'][:64]}...")
+    print("=" * 70)
+
+
+def test_difficulty_scaling() -> None:
+    """
+    Mine blocks at increasing difficulty levels to demonstrate exponential scaling.
+    
+    This test shows the fundamental property of PoW: as difficulty increases,
+    the work required grows exponentially. Each additional difficulty typically
+    requires ~5x more attempts on average, since each pixel independently has
+    a ~1/5 probability of satisfying the condition.
+    """
+    print("\nTesting difficulty scaling...")
+    print("Mining 'IGOW_GENESIS' at difficulty levels 1, 2, and 3:\n")
+    
+    results = []
+    
+    for difficulty in [1, 2, 3]:
+        result = mine_block("IGOW_GENESIS", difficulty)
+        print_mining_result(result)
+        results.append(result)
+    
+    # Print scaling summary
+    print("\n" + "=" * 70)
+    print("DIFFICULTY SCALING SUMMARY")
+    print("=" * 70)
+    
+    for i, result in enumerate(results):
+        diff = result["difficulty"]
+        attempts = result["attempts"]
+        print(f"Difficulty {diff}: {attempts:>6,} attempts")
+        
+        if i > 0:
+            prev_attempts = results[i - 1]["attempts"]
+            scaling_factor = round(attempts / prev_attempts, 1)
+            print(f"  → {scaling_factor}x harder than difficulty {diff - 1}")
+    
+    print("=" * 70)
+
+
 if __name__ == "__main__":
     # Test with sample block data
     print("=" * 50)
@@ -236,4 +349,16 @@ if __name__ == "__main__":
         status = "PASS" if result else "FAIL"
         print(f"Difficulty {diff}: {status}")
     
+    print("=" * 50)
+    
+    # ============================================================
+    # MINING LOOP TEST
+    # ============================================================
+    print("\n" + "=" * 50)
+    print("MINING LOOP TEST")
+    print("=" * 50)
+    
+    test_difficulty_scaling()
+    
+    print("\nAll tests completed successfully!")
     print("=" * 50)
