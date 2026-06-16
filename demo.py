@@ -20,7 +20,7 @@ def print_section(title: str) -> None:
 
 def run_demo() -> None:
     """Run the full IGoW V1 presentation demo from mining to tamper testing."""
-    difficulty = 2
+    difficulty = 7
     width = 10
     height = 10
 
