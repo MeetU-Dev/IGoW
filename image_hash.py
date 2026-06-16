@@ -124,8 +124,8 @@ def check_difficulty(pixels: np.ndarray, difficulty: int) -> bool:
     Returns:
         bool: True if first `difficulty` pixels all have red < 50, False otherwise
     """
-    # Extract red channel (index 2 in RGB, which is the last axis)
-    red_channel = pixels[:, :, 2]
+    # Extract red channel (index 0 in RGB, which is the last axis)
+    red_channel = pixels[:, :, 0]
     
     # Flatten to 1D array
     red_flat = red_channel.flatten()
@@ -285,8 +285,16 @@ def test_difficulty_scaling() -> None:
     
     results = []
     
+    # Use distinct, progressively harder test data per difficulty level
+    data_map = {
+        1: "IGOW_TEST_D1",
+        2: "IGOW_TEST_D2",
+        3: "IGOW_TEST_D3",
+    }
+
     for difficulty in [1, 2, 3]:
-        result = mine_block("IGOW_GENESIS", difficulty)
+        data = data_map[difficulty]
+        result = mine_block(data, difficulty)
         print_mining_result(result)
         results.append(result)
     
