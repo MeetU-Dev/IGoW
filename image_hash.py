@@ -217,7 +217,7 @@ def visualize_difficulty() -> None:
     print("-" * 70)
 
 
-def mine_block(data: str, difficulty: int, width: int = 10, height: int = 10) -> dict:
+def mine_block(data: str, difficulty: int, width: int = 10, height: int = 10, max_workers: int = 1) -> dict:
     """
     Mine a block by finding a nonce that produces an image meeting difficulty threshold.
     
@@ -254,29 +254,79 @@ def mine_block(data: str, difficulty: int, width: int = 10, height: int = 10) ->
     start_time = time.time()
     nonce = 0
     
-    # Brute force search for valid nonce
-    while True:
-        pixels = generate_image_hash(data, nonce, width, height)
-        
-        if check_difficulty(pixels, difficulty):
-            end_time = time.time()
-            elapsed = round(end_time - start_time, 4)
-            # attempts should count how many nonces were tried (nonce starts at 0)
-            attempts = nonce + 1
-            hash_rate = round(attempts / elapsed, 2) if elapsed > 0 else 0
-            
-            return {
-                "nonce": nonce,
-                "attempts": attempts,
-                "elapsed": elapsed,
-                "hash_rate": hash_rate,
-                "pixels": pixels,
-                "image_hex": image_to_hex(pixels),
-                "data": data,
-                "difficulty": difficulty
-            }
-        
-        nonce += 1
+    # Brute force search for valid nonce. If max_workers > 1, attempt parallel search.
+    if max_workers is None or max_workers <= 1:
+        # Sequential search
+        while True:
+            pixels = generate_image_hash(data, nonce, width, height)
+
+            if check_difficulty(pixels, difficulty):
+                end_time = time.time()
+                elapsed = round(end_time - start_time, 4)
+                # attempts should count how many nonces were tried (nonce starts at 0)
+                attempts = nonce + 1
+                hash_rate = round(attempts / elapsed, 2) if elapsed > 0 else 0
+
+                return {
+                    "nonce": nonce,
+                    "attempts": attempts,
+                    "elapsed": elapsed,
+                    "hash_rate": hash_rate,
+                    "pixels": pixels,
+                    "image_hex": image_to_hex(pixels),
+                    "data": data,
+                    "difficulty": difficulty,
+                }
+
+            nonce += 1
+    else:
+        # Parallel search using threads. Each worker checks nonces starting from its id
+        # stepping by `max_workers` to avoid overlap. This is a best-effort parallel
+        # explorer; order of discovered nonce may differ from sequential search.
+        import threading
+
+        found = threading.Event()
+        result = {}
+
+        def worker(start_id: int):
+            nonlocal result
+            i = start_id
+            while not found.is_set():
+                pixels = generate_image_hash(data, i, width, height)
+                if check_difficulty(pixels, difficulty):
+                    end_time = time.time()
+                    elapsed = round(end_time - start_time, 4)
+                    attempts = i + 1
+                    hash_rate = round(attempts / elapsed, 2) if elapsed > 0 else 0
+                    result = {
+                        "nonce": i,
+                        "attempts": attempts,
+                        "elapsed": elapsed,
+                        "hash_rate": hash_rate,
+                        "pixels": pixels,
+                        "image_hex": image_to_hex(pixels),
+                        "data": data,
+                        "difficulty": difficulty,
+                    }
+                    found.set()
+                    return
+                i += max_workers
+
+        threads = []
+        for w in range(max_workers):
+            t = threading.Thread(target=worker, args=(w,))
+            t.daemon = True
+            threads.append(t)
+            t.start()
+
+        # Wait for a worker to find a result
+        found.wait()
+        # Join threads briefly
+        for t in threads:
+            if t.is_alive():
+                t.join(0.01)
+
+        return result
 
 
 def print_mining_result(result: dict) -> None:

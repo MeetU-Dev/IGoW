@@ -85,6 +85,8 @@ class Block:
             "height": self.height,
             "image_hex": self.image_hex,
             "fingerprint": self.fingerprint,
+            "signature": getattr(self, "signature", None).hex() if getattr(self, "signature", None) else None,
+            "creator_pubkey": getattr(self, "creator_pubkey", None).hex() if getattr(self, "creator_pubkey", None) else None,
         }
 
     @classmethod
@@ -107,6 +109,10 @@ class Block:
         block.height = obj.get("height", 10)
         block.image_hex = obj.get("image_hex", "")
         block.fingerprint = obj.get("fingerprint", "")
+        sig_hex = obj.get("signature")
+        pub_hex = obj.get("creator_pubkey")
+        block.signature = bytes.fromhex(sig_hex) if sig_hex else None
+        block.creator_pubkey = bytes.fromhex(pub_hex) if pub_hex else None
         # pixels are not persisted to keep storage light; they can be regenerated
         block.pixels = None
         block.block_data = json.dumps(

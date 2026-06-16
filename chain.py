@@ -4,6 +4,7 @@ import os
 import hashlib
 from datetime import datetime
 from block import Block
+from security import generate_keypair, sign, verify
 
 
 class IGoWChain:
@@ -16,6 +17,9 @@ class IGoWChain:
         self.height = height
         # The chain is a list of Block objects linked by fingerprints, not a database or file.
         self.chain = []
+        # optional node keypair for signing blocks/checkpoints
+        self.node_privkey = None
+        self.node_pubkey = None
         self._create_genesis_block()
 
     def _create_genesis_block(self) -> None:
@@ -31,6 +35,12 @@ class IGoWChain:
         )
         self.chain.append(genesis_block)
 
+        # If node keys are not set, generate a demo symmetric keypair (or Ed25519 if available)
+        if not self.node_privkey:
+            priv, pub = generate_keypair()
+            self.node_privkey = priv
+            self.node_pubkey = pub
+
     def add_block(self, data: str) -> Block:
         """Mine and append a new block that points to the current chain tip."""
         last_block = self.chain[-1]
@@ -44,6 +54,14 @@ class IGoWChain:
             height=self.height,
         )
         self.chain.append(new_block)
+        # Sign the block fingerprint if node keys are available
+        try:
+            sig = sign(new_block.fingerprint.encode(), self.node_privkey)
+            new_block.signature = sig
+            new_block.creator_pubkey = self.node_pubkey
+        except Exception:
+            new_block.signature = None
+            new_block.creator_pubkey = None
         return new_block
 
     def verify_chain(self) -> dict:
@@ -136,6 +154,21 @@ class IGoWChain:
         path = os.path.join(snapshots_dir, filename)
         self.save_to_file(path)
         return path
+
+    def save_checkpoint(self, path: str) -> None:
+        """Save a simple checkpoint containing last fingerprint and signature."""
+        if not self.chain:
+            raise RuntimeError("Chain is empty")
+        last_fp = self.chain[-1].fingerprint
+        sig = sign(last_fp.encode(), self.node_privkey) if self.node_privkey else b""
+        data = {
+            "last_fingerprint": last_fp,
+            "signature": sig.hex(),
+            "pubkey": (self.node_pubkey.hex() if self.node_pubkey else ""),
+            "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+        }
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(data, fh, indent=2)
 
     def display_chain(self) -> None:
         """Print a readable summary of the chain and how each block links to the next."""

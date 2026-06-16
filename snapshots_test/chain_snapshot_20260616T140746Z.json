@@ -1,0 +1,40 @@
+{
+  "created_at": "2026-06-16 19:37:46",
+  "difficulty": 1,
+  "width": 10,
+  "height": 10,
+  "blocks": [
+    {
+      "index": 0,
+      "timestamp": "2026-06-16 19:37:46",
+      "data": "IGOW_GENESIS",
+      "previous_fingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
+      "nonce": 0,
+      "attempts": 1,
+      "elapsed": 0.009,
+      "difficulty": 1,
+      "width": 10,
+      "height": 10,
+      "image_hex": "24d7408328fa1b6ea0422f43a58e0ac5271deb3ee5367cc593ba975e219c9c7e9b2738ae095a1fccab93fd30312f89314e15ff013fcaa55b782a3d2ca6bafa2503e34be9e13541f59073edc5aa6c477b83a0d3acca935853eadfa2a05a00b95abfe9a9955bb7414d48214796608c811de99372a5f4ad38a4b9fa5d94e4940d301ab67cfed15ca023dfac892e8c063db1dbd5155efde47fe5867810f49368ce9ba008fa44bf67de9d4022616f6cfec11d8fe02fb1cfc752b7199291441c42691a888a38de058eaf7679358cc763b3f3240b2d623d53b75f36f5586ff35adbf64db18b9f49c53de63036cd56c9239aac2a73ed7429de6d0e61f71c0da34ba237dfa70e84916650849910b7e7adf00ff7842ee77587d3adda9803df92b13acb48bf59f531767ca3c59a645a4f5c",
+      "fingerprint": "38d0a574d0cba77c717f47105bff5ddbc2c139ad27ba9216f5d972c86da3dd54",
+      "signature": null,
+      "creator_pubkey": null
+    },
+    {
+      "index": 1,
+      "timestamp": "2026-06-16 19:37:46",
+      "data": "Tx Test",
+      "previous_fingerprint": "38d0a574d0cba77c717f47105bff5ddbc2c139ad27ba9216f5d972c86da3dd54",
+      "nonce": 1,
+      "attempts": 2,
+      "elapsed": 0.0,
+      "difficulty": 1,
+      "width": 10,
+      "height": 10,
+      "image_hex": "222070236d15ae9aae02f06e57c04fc325ef942c4efeed5eacdafeb18b476ac82d48fa985b903cba27267c28bc92c56c454aeea9df582897f84a0613c5fd7d0c5f8015167d28a0c1d499aa4af9352f68685751b3a30fb9bc5d2354aa749e053fc2a7fe57915bc31e5c4ce3df3d7f1e1efe2fed33bd75a3a1e2fe5f2a7e6d919f0c5bf665b0681c333ab083a2a99b14ba8b7f4151bafa06af2a0da6d1796170f6d71596e176f5c3ac8aee5e951ad818f96ea966587d175c461b3e099645fe825e58900a3cbab8683ffd2caf9e3237256953e617aa34e9672e805f2114579894f6b92b2c110ad9f766f705ad9f225a47112549462558835f476fb23cdf0ed91bb8a8190f0e8015a8a1129c0affe52eb206e814f90f6f872c919c1b7b67a37cd9466b43c9d18794a82ea924c214",
+      "fingerprint": "1da6c277e7bc6dc7a97f284627f1535309e38faf251450b263957473b8471171",
+      "signature": "1a1034b7af7dd6b75943b53fc1271e11eaab9f3c44689589057c3f1676a0eec6",
+      "creator_pubkey": "743726ffbacaa2a5d7bb41ad48f80a3821f64ca263f3d016595b8dd7f0a78468"
+    }
+  ]
+}
