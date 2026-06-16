@@ -1,5 +1,8 @@
 import json
 import time
+import os
+import hashlib
+from datetime import datetime
 from block import Block
 
 
@@ -53,6 +56,12 @@ class IGoWChain:
                 errors.append(f"Block {i}: image proof invalid")
                 valid = False
 
+            # Recompute fingerprint from the stored image_hex and ensure it matches the stored fingerprint
+            recomputed_fp = hashlib.sha256(current.image_hex.encode()).hexdigest()
+            if recomputed_fp != current.fingerprint:
+                errors.append(f"Block {i}: fingerprint mismatch")
+                valid = False
+
             if i > 0:
                 previous = self.chain[i - 1]
                 if current.previous_fingerprint != previous.fingerprint:
@@ -86,6 +95,47 @@ class IGoWChain:
             print("TAMPER DETECTED")
         else:
             print("TAMPER NOT DETECTED")
+
+    def save_to_file(self, path: str) -> None:
+        """Persist the full chain to a JSON file at `path`.
+
+        The saved format includes the full `image_hex` for each block so the
+        chain can be fully reconstructed without re-mining.
+        """
+        data = {
+            "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "difficulty": self.difficulty,
+            "width": self.width,
+            "height": self.height,
+            "blocks": [b.to_serializable() for b in self.chain],
+        }
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(data, fh, indent=2)
+
+    @classmethod
+    def load_from_file(cls, path: str) -> "IGoWChain":
+        """Load a chain previously saved with `save_to_file`.
+
+        This reconstructs `Block` instances without re-mining.
+        """
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+
+        chain = object.__new__(cls)
+        chain.difficulty = data.get("difficulty", 2)
+        chain.width = data.get("width", 10)
+        chain.height = data.get("height", 10)
+        chain.chain = [Block.from_serializable(b) for b in data.get("blocks", [])]
+        return chain
+
+    def save_snapshot(self, snapshots_dir: str = "snapshots") -> str:
+        """Save a timestamped snapshot to the `snapshots_dir` and return the filepath."""
+        os.makedirs(snapshots_dir, exist_ok=True)
+        ts = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+        filename = f"chain_snapshot_{ts}.json"
+        path = os.path.join(snapshots_dir, filename)
+        self.save_to_file(path)
+        return path
 
     def display_chain(self) -> None:
         """Print a readable summary of the chain and how each block links to the next."""

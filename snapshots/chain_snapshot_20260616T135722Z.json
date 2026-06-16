@@ -1,0 +1,36 @@
+{
+  "created_at": "2026-06-16 19:27:22",
+  "difficulty": 2,
+  "width": 10,
+  "height": 10,
+  "blocks": [
+    {
+      "index": 0,
+      "timestamp": "2026-06-16 19:27:22",
+      "data": "IGOW_GENESIS",
+      "previous_fingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
+      "nonce": 42,
+      "attempts": 43,
+      "elapsed": 0.0184,
+      "difficulty": 2,
+      "width": 10,
+      "height": 10,
+      "image_hex": "151bb519ed4dabdec8cbe5fec140aea1d76b497cedd3128177d4b835be41abc24cfdd65496d96c2239936f63b2168cec0767fab06878d6a61270ab859ab0850de785c030db91cad3bf06b83e9d5080f41406f2b4b2f414f0e0e7287479507c3ac64d1d9f77a7fb978399ad9805e28b3a47c6e3f35701cc4f84c6590194522b2b112d89e6b06b1fa79fd010f5216d0cfcb9b32dca6e846338d923b82eae86daef33c8ab39c8db07cb775136acade011d33078c3bdfaac2fc5c4d1c784fc59fa016e1c0a50e60495710a970c50a6b588015eb3c404131c2dc703c19b279d8dd72597284cc4dde26124e3366dd3c1d1adb8407cede70bdfef5f1695babbae72d4a32baf6a8d79a45e471ce9dee3b75d168a8b0c97bf5b68c35f7d2f7f89c611cb3ca5f20eb8da43ff7e796256c7",
+      "fingerprint": "4815f923e38db1dcef7c413a50045cd4a9fe1bf60cd0ed66fd890a54f6de06d2"
+    },
+    {
+      "index": 1,
+      "timestamp": "2026-06-16 19:27:22",
+      "data": "Test A",
+      "previous_fingerprint": "4815f923e38db1dcef7c413a50045cd4a9fe1bf60cd0ed66fd890a54f6de06d2",
+      "nonce": 25,
+      "attempts": 26,
+      "elapsed": 0.0003,
+      "difficulty": 2,
+      "width": 10,
+      "height": 10,
+      "image_hex": "05d1f019836ed0e43965cffa88fb4f91c64f63c844673bacde0e0450b1c219ce6098f344e0cb6ad2dfb57ef7499fabffb76293d89f32f2a60e079de3798cb7a24c193da5043ca3b0d562c701fe5b6ff9e10134a1f837d635d1a7af02f20ef5bf36e1ed73328ea818f5bb3db0459540341178c31731aab51536ce19308a8f9d762b6e4a36b95e63169733c330ba5ca2f7a0c2fe157b3a670f612d56656c64cdac2aefb7bca75517e0ff366a5480b5656f7dd23f2fc8dd35fd8acd1f08b708c9ad9e98c5764adb87263c84933c42545d5dcec83e14ff072ce8c925a0dc890ac83469bbbd2aabc1ebb1a2dc49c20cba183ce5d5ebc6a3d32909c18a92cb0fbbd5b807d20ecbd56e86699d8a0e4fa16b64d05f0670e91fed661cf709ce43b801cbb7d9def61f025c56f45296785a",
+      "fingerprint": "e3df179c1307cb2036ef5627aaeb1a338f16f86129c65540d12d6a1185872e5e"
+    }
+  ]
+}

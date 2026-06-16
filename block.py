@@ -42,8 +42,14 @@ class Block:
         # Verification proves the nonce produces a valid image without trusting stored data.
         regenerated = generate_image_hash(self.block_data, self.nonce, self.width, self.height)
         difficulty_ok = check_difficulty(regenerated, self.difficulty)
-        hex_ok = image_to_hex(regenerated) == self.image_hex
-        return difficulty_ok and hex_ok
+        regenerated_hex = image_to_hex(regenerated)
+        hex_ok = regenerated_hex == self.image_hex
+
+        # Recompute fingerprint from regenerated image hex and ensure it matches stored fingerprint.
+        recomputed_fingerprint = hashlib.sha256(regenerated_hex.encode()).hexdigest()
+        fingerprint_ok = recomputed_fingerprint == self.fingerprint
+
+        return difficulty_ok and hex_ok and fingerprint_ok
 
     def to_dict(self) -> dict:
         """Return a display-friendly snapshot of the block state."""
@@ -60,6 +66,59 @@ class Block:
             "image_hex": self.image_hex[:64] + "...",
             "fingerprint": self.fingerprint,
         }
+
+    def to_serializable(self) -> dict:
+        """Return a complete dict suitable for JSON serialization and persistence.
+
+        Includes full `image_hex` and reconstruction parameters (width/height).
+        """
+        return {
+            "index": self.index,
+            "timestamp": self.timestamp,
+            "data": self.data,
+            "previous_fingerprint": self.previous_fingerprint,
+            "nonce": self.nonce,
+            "attempts": self.attempts,
+            "elapsed": self.elapsed,
+            "difficulty": self.difficulty,
+            "width": self.width,
+            "height": self.height,
+            "image_hex": self.image_hex,
+            "fingerprint": self.fingerprint,
+        }
+
+    @classmethod
+    def from_serializable(cls, obj: dict) -> "Block":
+        """Reconstruct a Block instance from serialized data without re-mining.
+
+        This creates the object directly and sets attributes. It does not call the
+        mining constructor because the image and fingerprint are already provided.
+        """
+        block = object.__new__(cls)
+        block.index = obj["index"]
+        block.timestamp = obj["timestamp"]
+        block.data = obj["data"]
+        block.previous_fingerprint = obj["previous_fingerprint"]
+        block.nonce = obj["nonce"]
+        block.attempts = obj.get("attempts", 0)
+        block.elapsed = obj.get("elapsed", 0)
+        block.difficulty = obj.get("difficulty", 0)
+        block.width = obj.get("width", 10)
+        block.height = obj.get("height", 10)
+        block.image_hex = obj.get("image_hex", "")
+        block.fingerprint = obj.get("fingerprint", "")
+        # pixels are not persisted to keep storage light; they can be regenerated
+        block.pixels = None
+        block.block_data = json.dumps(
+            {
+                "index": block.index,
+                "data": block.data,
+                "previous_fingerprint": block.previous_fingerprint,
+                "timestamp": block.timestamp,
+            },
+            sort_keys=True,
+        )
+        return block
 
     def display(self) -> None:
         """Print a readable block summary for debugging and inspection."""

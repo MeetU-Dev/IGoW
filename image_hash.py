@@ -32,6 +32,16 @@ def generate_image_hash(data: str, nonce: int, width: int = 10, height: int = 10
         np.ndarray: Array of shape (height, width, 3) with uint8 RGB values (0-255)
     """
     # Combine data and nonce into a single string
+    # Input validation
+    if not isinstance(data, str):
+        raise TypeError("data must be a string")
+    if not isinstance(nonce, int) or nonce < 0:
+        raise ValueError("nonce must be a non-negative integer")
+    if not isinstance(width, int) or not isinstance(height, int):
+        raise TypeError("width and height must be integers")
+    if width <= 0 or height <= 0 or width > 2000 or height > 2000:
+        raise ValueError("width and height must be between 1 and 2000")
+
     combined = f"{data}:{nonce}"
     
     # Compute SHA-256 hash
@@ -124,17 +134,28 @@ def check_difficulty(pixels: np.ndarray, difficulty: int) -> bool:
     Returns:
         bool: True if first `difficulty` pixels all have red < 50, False otherwise
     """
-    # Extract red channel (index 0 in RGB, which is the last axis)
+    # Input validation
+    if not isinstance(pixels, np.ndarray):
+        raise TypeError("pixels must be a numpy ndarray")
+    if not isinstance(difficulty, int) or difficulty < 0:
+        raise ValueError("difficulty must be a non-negative integer")
+
+    # Extract red channel (index 0 in RGB, which is the first axis of color)
     red_channel = pixels[:, :, 0]
     
     # Flatten to 1D array
     red_flat = red_channel.flatten()
     
+    total_pixels = red_flat.size
+    if difficulty > total_pixels:
+        # impossible to satisfy
+        return False
+
     # Check first `difficulty` pixels - all must have red < 50
     for i in range(difficulty):
         if red_flat[i] >= 50:
             return False
-    
+
     return True
 
 
@@ -222,6 +243,14 @@ def mine_block(data: str, difficulty: int, width: int = 10, height: int = 10) ->
             - "data": Original data string
             - "difficulty": Difficulty level used
     """
+    # Input validation
+    if not isinstance(difficulty, int) or difficulty < 0:
+        raise ValueError("difficulty must be a non-negative integer")
+    if not isinstance(width, int) or not isinstance(height, int):
+        raise TypeError("width and height must be integers")
+    if width <= 0 or height <= 0:
+        raise ValueError("width and height must be positive integers")
+
     start_time = time.time()
     nonce = 0
     
@@ -232,11 +261,13 @@ def mine_block(data: str, difficulty: int, width: int = 10, height: int = 10) ->
         if check_difficulty(pixels, difficulty):
             end_time = time.time()
             elapsed = round(end_time - start_time, 4)
-            hash_rate = round(nonce / elapsed, 2) if elapsed > 0 else 0
+            # attempts should count how many nonces were tried (nonce starts at 0)
+            attempts = nonce + 1
+            hash_rate = round(attempts / elapsed, 2) if elapsed > 0 else 0
             
             return {
                 "nonce": nonce,
-                "attempts": nonce,
+                "attempts": attempts,
                 "elapsed": elapsed,
                 "hash_rate": hash_rate,
                 "pixels": pixels,
